@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CTF Playground</title>
+<style>
+body { font-family: Arial, sans-serif; margin: 40px; }
+h1 { color: #cc0000; }
+form { margin-bottom: 20px; }
+input, textarea { width: 300px; margin-bottom: 10px; }
+button { padding: 5px 10px; }
+pre { background: #eee; padding: 10px; }
+</style>
+</head>
+<body>
+<h1>CTF Playground</h1>
+
+<script>
+// Helper to send GET requests
+async function getRequest(url, outputId) {
+    try {
+        const res = await fetch(url);
+        const text = await res.text();
+        document.getElementById(outputId).innerHTML = text.replace(/\n/g, '<br>');
+    } catch(e) {
+        document.getElementById(outputId).innerText = 'Error: ' + e;
+    }
+}
+
+// Helper to send POST requests with form data
+async function postRequest(url, formId, outputId) {
+    const form = document.getElementById(formId);
+    const data = new FormData(form);
+    try {
+        const res = await fetch(url, { method: 'POST', body: data });
+        const text = await res.text();
+        document.getElementById(outputId).innerHTML = text.replace(/\n/g, '<br>');
+    } catch(e) {
+        document.getElementById(outputId).innerText = 'Error: ' + e;
+    }
+}
+</script>
+
+<h2>Login (vulnerable)</h2>
+<form id="loginForm" onsubmit="event.preventDefault(); postRequest('/login','loginForm','loginOutput')">
+    Username: <input name="username"><br>
+    Password: <input type="password" name="password"><br>
+    <button type="submit">Login</button>
+</form>
+<pre id="loginOutput"></pre>
+
+<h2>LFI (Local File Inclusion)</h2>
+<input id="lfiFile" placeholder="server.js">
+<button onclick="getRequest('/view?file=' + document.getElementById('lfiFile').value, 'lfiOutput')">View File</button>
+<pre id="lfiOutput"></pre>
+
+<h2>SQLi Simulation</h2>
+<input id="sqliUser" placeholder="alice">
+<button onclick="getRequest('/profile?user=' + document.getElementById('sqliUser').value, 'sqliOutput')">Get Profile</button>
+<pre id="sqliOutput"></pre>
+
+<h2>Stored XSS</h2>
+<form id="xssForm" onsubmit="event.preventDefault(); postRequest('/comment','xssForm','xssOutput')">
+    Comment: <textarea name="msg"></textarea><br>
+    <button type="submit">Add Comment</button>
+</form>
+<button onclick="getRequest('/comments','xssOutput')">View Comments</button>
+<pre id="xssOutput"></pre>
+
+<h2>Command Injection</h2>
+<input id="cmdHost" placeholder="127.0.0.1">
+<button onclick="getRequest('/ping?host=' + document.getElementById('cmdHost').value, 'cmdOutput')">Ping</button>
+<pre id="cmdOutput"></pre>
+
+<h2>File Upload</h2>
+<form id="uploadForm" onsubmit="event.preventDefault(); postRequest('/upload','uploadForm','uploadOutput')" enctype="multipart/form-data">
+    <input type="file" name="file"><br>
+    <button type="submit">Upload</button>
+</form>
+<pre id="uploadOutput"></pre>
+
+</body>
+</html>
